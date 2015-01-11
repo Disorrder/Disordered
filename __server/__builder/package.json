@@ -1,0 +1,22 @@
+{
+  "name": "disordered-builder",
+  "description": "Disordered node.js builder",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "jade": "*",
+    "stylus": "*",
+    "nib": "*",
+    "coffee-script": "*",
+    "fs-extra": "*",
+
+    "bower": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Disorrder/Disordered.git"
+  },
+  "engines": {
+    "node": ">=0.8.0"
+  }
+}

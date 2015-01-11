@@ -1,0 +1,30 @@
+{
+	"name": "buzzlike-usernode",
+	"description": "Buzzlike user node worker",
+	"dependencies": {
+		"coffee-script": 	"*",
+		"socket.io": 		"*",
+		"socket.io-emitter":"*",
+		"socket.io-redis": 	"*",
+		"request": 			"*",
+
+		"express": 			"*",
+		"body-parser":		"*",
+		"fbgraph": 			"*",
+		"blueimp-md5": 		"*",
+
+		"mongoskin": 		"*",
+		"redis": 			"*",
+		"hiredis": 			"*",
+		"kue": 				"*",
+
+		"crypto": 			"*",
+		"cheerio": 			"*",
+		"iconv": 			"*",
+
+		"xlsx":				"*",
+		"multer":			"*",
+
+		"sticky-session": 	"*"
+	}
+}
