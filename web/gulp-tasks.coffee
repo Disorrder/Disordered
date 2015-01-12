@@ -34,7 +34,7 @@ class Lib
     @initGulp: (gulpPtr) -> gulp = gulpPtr
     @list: {}
 
-    @add: (name, dependencies, action) =>
+    @add: (name, dependencies = [], action) =>
         if typeof dependencies == 'function'
             action = dependencies
             dependencies = []

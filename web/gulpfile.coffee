@@ -6,9 +6,11 @@ stylus      = require 'gulp-stylus'
 coffee      = require 'gulp-coffee'
 webserver   = require 'gulp-webserver'
 filter      = require 'gulp-filter'
+ignore      = require 'gulp-ignore'
 concat      = require 'gulp-concat'
 wrap        = require 'gulp-wrap'
 fs          = require 'fs-extra'
+File        = require 'vinyl'
 bowerFiles  = require 'main-bower-files'
 eventStream = require 'event-stream'
 tasks       = require './gulp-tasks.coffee'
@@ -35,7 +37,7 @@ tasks.add 'clean', ->
     fs.mkdirpSync path.build
 
 # Command line commands
-tasks.add 'default', ['clean', 'build', 'webserver']
+tasks.add 'default', ['clean', 'build'] #, 'webserver']
 tasks.add 'build'
 
 # --- Webserver ---
@@ -48,6 +50,107 @@ tasks.add 'webserver', ['build', 'watch'], ->
             open: "#{settings.host}:#{settings.port}"
             fallback: 'index.html'
             livereload: settings.livereload
+
+
+# --- BUILDER ---
+getExt = (str) ->
+    ext = str.match(/\.\w+$/)
+    if !ext then return null
+    ext[0].substr(1)
+
+class Files
+    @read: true
+    @changedFiles: []
+    @check: -> true
+
+    @build: ->
+        stream = gulp.src @sources, {base: @base, read: @read}
+            .pipe ignore.exclude "**/#{path.excludePrefix}*"
+
+        if @changedFiles.length then stream.pipe ignore.include @changedFiles
+        if @filter then stream.pipe @filter
+        stream
+
+
+class Libs extends Files
+    @base: './'
+    @files: {}
+    @sources: bowerFiles()
+
+    @build: ->
+        super()
+            .pipe gulp.dest path.build
+            #.pipe @cacheFiles()
+
+    tasks.add 'libs', => @build()
+        .includeTo 'build'
+
+
+class App extends Files
+    @base: path.app
+    @files: {}
+    @sources: "#{path.app}**/*.*"
+
+    @mapExt: (ext) ->
+        switch ext
+            when null, undefined then 'folder'
+            when 'eot', 'svg', 'ttf', 'woff' then 'fonts'
+            else return ext
+
+    @cacheFiles: ->
+        eventStream.map (file, cb) =>
+            @cacheFile file
+            cb null, file
+
+    @cacheFile: (f) ->
+        ext = @mapExt getExt f.path
+        log "[Caching] #{ext} - #{f.path} = #{f.relative}"
+        if !@files[ext] then @files[ext] = {}
+        @files[ext][f.relative] = f
+
+
+class Coffee extends App
+    @sources: "#{path.app}**/*.coffee"
+
+    @build: ->
+        super()
+            .pipe coffee({bare: true}).on('error', log)
+            .pipe @cacheFiles()
+            .pipe gulp.dest path.build
+
+    tasks.add 'Coffee', => @build()
+        .includeTo 'build'
+
+class Stylus extends App
+    @sources: "#{path.app}**/*.styl"
+
+    @build: ->
+        super()
+            .pipe stylus()
+            .pipe @cacheFiles()
+            #.pipe gulp.dest path.build
+            .pipe buffer (err, files) =>
+                if files.length
+                    tasks.get('main.css').enable()
+                else
+                    tasks.get('main.css').disable()
+
+    tasks.add 'Stylus', => @build()
+        .includeTo 'build'
+
+    tasks.add 'main.css', 'Stylus',
+
+class Jade extends App
+    @sources: ["#{path.app}**/*.jade", "!#{path.app}index.jade"]
+
+    @build: ->
+        super()
+            .pipe jade()
+            .pipe @cacheFiles()
+            .pipe gulp.dest path.build
+
+    tasks.add 'Jade', ['Coffee', 'Stylus'], => @build()
+        .includeTo 'build'
 
 
 
