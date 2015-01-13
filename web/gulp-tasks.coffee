@@ -10,7 +10,7 @@ class Task
         dependencies = []
         dependencies.push d for d in @dependencies when !Lib.list[d] or Lib.list[d].enabled
 
-        @task = gulp.task @name, dependencies, => @action?() if @enabled
+        @task = gulp.task @name, dependencies, => if @enabled then @action?() else log "Task disabled"
         @
 
     constructor: (@name, @dependencies, @action) ->
@@ -25,7 +25,8 @@ class Task
 
     setEnabled: (cond = false) ->
         @enabled = !!cond
-        Lib.refresh()
+        #Lib.refresh()
+
     disable: -> @setEnabled false
     enable:  -> @setEnabled true
 

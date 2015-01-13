@@ -63,11 +63,11 @@ class Files
     @changedFiles: []
     @check: -> true
 
-    @build: ->
+    @build: (full = false) ->
         stream = gulp.src @sources, {base: @base, read: @read}
             .pipe ignore.exclude "**/#{path.excludePrefix}*"
 
-        if @changedFiles.length then stream.pipe ignore.include @changedFiles
+        if !full and @changedFiles.length then stream.pipe ignore.include @changedFiles
         if @filter then stream.pipe @filter
         stream
 
@@ -84,7 +84,6 @@ class Libs extends Files
 
     tasks.add 'libs', => @build()
         .includeTo 'build'
-
 
 class App extends Files
     @base: path.app
@@ -108,7 +107,6 @@ class App extends Files
         if !@files[ext] then @files[ext] = {}
         @files[ext][f.relative] = f
 
-
 class Coffee extends App
     @sources: "#{path.app}**/*.coffee"
 
@@ -124,21 +122,33 @@ class Coffee extends App
 class Stylus extends App
     @sources: "#{path.app}**/*.styl"
 
-    @build: ->
-        super()
+    @check: ->
+        @build()
             .pipe stylus()
-            .pipe @cacheFiles()
+            #.pipe @cacheFiles()
             #.pipe gulp.dest path.build
             .pipe buffer (err, files) =>
+                #return true
                 if files.length
                     tasks.get('main.css').enable()
                 else
                     tasks.get('main.css').disable()
 
-    tasks.add 'Stylus', => @build()
-        .includeTo 'build'
+    @concat: ->
+        @build()
+            .pipe stylus()
+            .pipe @cacheFiles()
+            .pipe wrap '/* <%= file.relative %> */\n<%= contents %>'
+            .pipe concat 'main.css'
+            .pipe gulp.dest "#{path.build}styles/"
 
-    tasks.add 'main.css', 'Stylus',
+    tasks.add 'Stylus'
+
+    tasks.add 'Stylus.check', => @check()
+        .includeTo 'Stylus'
+
+    tasks.add 'main.css', 'Stylus.check', => @concat()
+        .includeTo 'Stylus'
 
 class Jade extends App
     @sources: ["#{path.app}**/*.jade", "!#{path.app}index.jade"]
@@ -151,7 +161,3 @@ class Jade extends App
 
     tasks.add 'Jade', ['Coffee', 'Stylus'], => @build()
         .includeTo 'build'
-
-
-
-
