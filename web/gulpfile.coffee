@@ -27,8 +27,8 @@ path.images      = "#{path.app}images/*.{png,svg,gif,jpg,jpeg}"
 
 settings = # TODO in file
     usemin: true, # use .js.min if allowed instead .js
-    host: 'http://disordered.local',
-    port: '8000',
+    host: 'localhost',
+    port: '18000',
     livereload: true
 
 tasks.add 'clean', ->
@@ -37,7 +37,7 @@ tasks.add 'clean', ->
     fs.mkdirpSync path.build
 
 # Command line commands
-tasks.add 'default', ['clean', 'build'] #, 'webserver']
+tasks.add 'default', ['clean', 'build', 'webserver']
 tasks.add 'build'
 
 # --- Webserver ---
@@ -47,7 +47,9 @@ tasks.add 'watch', ['build'], ->
 tasks.add 'webserver', ['build', 'watch'], ->
     gulp.src path.build
         .pipe webserver
-            open: "#{settings.host}:#{settings.port}"
+            host: settings.host
+            port: settings.port
+            open: "http://#{settings.host}:#{settings.port}"
             fallback: 'index.html'
             livereload: settings.livereload
 
@@ -58,37 +60,13 @@ getExt = (str) ->
     if !ext then return null
     ext[0].substr(1)
 
+timer = 0
+tasks.add 'timer.start', -> timer = Date.now()
+    .includeTo 'build'
+
 class Files
     @read: true
-    @changedFiles: []
-    @check: -> true
-
-    @build: (full = false) ->
-        stream = gulp.src @sources, {base: @base, read: @read}
-            .pipe ignore.exclude "**/#{path.excludePrefix}*"
-
-        if !full and @changedFiles.length then stream.pipe ignore.include @changedFiles
-        if @filter then stream.pipe @filter
-        stream
-
-
-class Libs extends Files
-    @base: './'
-    @files: {}
-    @sources: bowerFiles()
-
-    @build: ->
-        super()
-            .pipe gulp.dest path.build
-            #.pipe @cacheFiles()
-
-    tasks.add 'libs', => @build()
-        .includeTo 'build'
-
-class App extends Files
-    @base: path.app
-    @files: {}
-    @sources: "#{path.app}**/*.*"
+    @checkedFiles: {}
 
     @mapExt: (ext) ->
         switch ext
@@ -107,6 +85,52 @@ class App extends Files
         if !@files[ext] then @files[ext] = {}
         @files[ext][f.relative] = f
 
+    @checkFiles: (full) ->
+        eventStream.map (file, cb) =>
+            if full then return cb null, file
+
+            rel = file.relative
+            ts  = file.stat.mtime
+            old_ts = @checkedFiles[rel]
+            @checkedFiles[rel] = ts
+
+            if !old_ts
+                log "[Checking] New file #{rel}"
+                return cb null, file
+
+            if old_ts < ts
+                log "[Checking] Update file #{rel}"
+                return cb null, file
+
+            cb()
+
+    @build: (full = false) ->
+        gulp.src @sources, {base: @base, read: @read}
+            .pipe ignore.exclude "**/#{path.excludePrefix}*"
+            .pipe @checkFiles full
+
+
+class Libs extends Files
+    @base: './'
+    @files: {}
+    @sources: bowerFiles()
+
+    @build: ->
+        super()
+            .pipe @cacheFiles()
+            .pipe gulp.dest path.build
+
+    tasks.add 'Libs', => @build()
+        .includeTo 'build'
+
+class App extends Files
+    @base: path.app
+    @files: {}
+    @sources: "#{path.app}**/*.*"
+
+    tasks.add 'App', ['Libs']
+        .includeTo 'build'
+
 class Coffee extends App
     @sources: "#{path.app}**/*.coffee"
 
@@ -117,7 +141,7 @@ class Coffee extends App
             .pipe gulp.dest path.build
 
     tasks.add 'Coffee', => @build()
-        .includeTo 'build'
+        .includeTo 'App'
 
 class Stylus extends App
     @sources: "#{path.app}**/*.styl"
@@ -128,14 +152,13 @@ class Stylus extends App
             #.pipe @cacheFiles()
             #.pipe gulp.dest path.build
             .pipe buffer (err, files) =>
-                #return true
                 if files.length
                     tasks.get('main.css').enable()
                 else
                     tasks.get('main.css').disable()
 
     @concat: ->
-        @build()
+        @build(true)
             .pipe stylus()
             .pipe @cacheFiles()
             .pipe wrap '/* <%= file.relative %> */\n<%= contents %>'
@@ -143,6 +166,7 @@ class Stylus extends App
             .pipe gulp.dest "#{path.build}styles/"
 
     tasks.add 'Stylus'
+        .includeTo 'App'
 
     tasks.add 'Stylus.check', => @check()
         .includeTo 'Stylus'
@@ -159,5 +183,23 @@ class Jade extends App
             .pipe @cacheFiles()
             .pipe gulp.dest path.build
 
+    @index: ->
+        gulp.src "#{path.app}index.jade"
+            .pipe jade
+                pretty: true,
+                locals:
+                    libs: Libs.files
+                    files: @files
+            .pipe @cacheFiles()
+            .pipe gulp.dest path.build
+
     tasks.add 'Jade', ['Coffee', 'Stylus'], => @build()
+        .includeTo 'App'
+
+    tasks.add 'index.html', ['App'], => @index()
         .includeTo 'build'
+
+
+tasks.add 'timer.finish', ['index.html'], -> log "! Project was built in #{(Date.now() - timer) / 1000}s"
+    .includeTo 'build'
+
