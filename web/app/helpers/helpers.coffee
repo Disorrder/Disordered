@@ -295,13 +295,18 @@ class AsyncFlow
                             if @completed == @succeeded then cb? true else cb? false
 
 #
-keyCodes =
-    backspace: 8
-    tab: 9
-    enter: 13
-    shift: 16
-    ctrl: 17
-    alt: 18
-    caps: 20
-    esc: 29
-    space: 32
+keyboard =
+    backspace: 8,
+    tab:    9,
+    enter:  13,
+    shift:  16,
+    ctrl:   17,
+    alt:    18,
+    caps:   20,
+    esc:    29,
+    space:  32,
+    left:   37,
+    up:     38,
+    right:  39,
+    down:   40
+
