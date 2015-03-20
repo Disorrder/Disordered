@@ -273,7 +273,7 @@ loadDevMode()
 #---
 
 # --- flow ---
-class AsyncFlow
+class AsyncFlow # mb use acync.js or promises?
     constructor: () ->
         @actions = []
         @completed = 0

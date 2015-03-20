@@ -87,7 +87,7 @@ class Files
 
     @checkFiles: (full) ->
         eventStream.map (file, cb) =>
-            if full then return cb null, file
+            if full then return cb null, file # skip checking, just return file
 
             rel = file.relative
             ts  = file.stat.mtime
