@@ -18,8 +18,15 @@ makeArray = (object) -> # maybe delete?
         v
 
 # get random integer value [min,max]
-getRandomInt = (min, max) ->
+getRandomIntFast = (min, max) ->
     Math.floor(Math.random() * (max - min + 1)) + min;
+
+getRandomInt = (min, max, system = 10) ->
+    min = parseInt(min, system)
+    max = parseInt(max, system)
+    float = Math.random() * (max - min + 1)
+    int = Math.floor(float) + min;
+    return if system == 10 then int else int.toString(system)
 
 fixEvent = (e) ->
     # получить объект событие для IE
