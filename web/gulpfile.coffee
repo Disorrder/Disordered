@@ -31,17 +31,19 @@ path =
 path.scripts     = "#{path.app}**/*.js"   # ?
 path.styles      = "#{path.app}**/*.styl" # ?
 path.templates   = "#{path.app}**/*.jade" # ?
-path.images      = "#{path.app}images/*.{png,svg,gif,jpg,jpeg}"
+path.assets      = 
+    images: "#{path.app}**/*.{png,svg,gif,jpg,jpeg,ico}"
+    fonts: "#{path.app}**/*.{eot,svg,ttf,woff,woff2}"
 
 settings = # TODO in file
-    usemin: true, # use .js.min if allowed instead .js
-    host: 'localhost',
-    port: '18000',
+    usemin: true # use .js.min if allowed instead .js
+    host: 'localhost'
+    port: 18000
     livereload: true
 
 tasks.add 'compile'
 tasks.add 'clean', ->
-#gulp.src('gulpfile.coffee').pipe(babel().pipe(gulp.dest path.build+'gulpfile/')
+    #gulp.src('gulpfile.coffee').pipe(babel().pipe(gulp.dest path.build+'gulpfile/')
     fs.removeSync path.build
     fs.mkdirpSync path.build
 
@@ -66,10 +68,10 @@ tasks.add 'watch', ['compile'], ->
 tasks.add 'webserver', ['compile', 'watch'], ->
     gulp.src path.build
     .pipe webserver
-        host: settings.host
+        host: '0.0.0.0' #settings.host
         port: settings.port
-        open: true # "http://#{settings.host}:#{settings.port}"
-# fallback: 'index.html'
+        open: "http://#{settings.host}:#{settings.port}"
+        # fallback: 'index.html'
         livereload: settings.livereload
 
 
@@ -81,7 +83,7 @@ getExt = (str) ->
 
 timer = 0
 tasks.add 'timer.start', -> timer = Date.now()
-.includeTo 'compile'
+    .includeTo 'compile'
 
 class Files
     @read: true
@@ -139,8 +141,8 @@ class Files
 
     @getFiles: (full = false) ->
         gulp.src @sources, {base: @base, read: @read}
-        .pipe ignore.exclude "**/#{path.excludePrefix}*"
-        .pipe @checkFiles full
+            .pipe ignore.exclude "**/#{path.excludePrefix}*"
+            .pipe @checkFiles full
 
 
 class App extends Files
@@ -169,6 +171,19 @@ class App extends Files
     tasks.add 'App'
         .includeTo 'compile'
 
+class Assets extends App
+    @build: ->
+        logStr = "Moving assets: "
+        for k, v of path.assets
+            logStr += "#{k}, "
+            gulp.src(v)
+                .pipe @cacheFiles()
+                .pipe gulp.dest path.build
+        log logStr.substring(0, logStr.length - 2)
+
+    tasks.add 'Assets', => @build()
+        .includeTo 'App'
+
 class Bower extends App
     @base: './'
     @files: {}
@@ -177,8 +192,8 @@ class Bower extends App
     @build: ->
         if settings.buildmode in ['jspm'] then return
         @getFiles()
-        .pipe @cacheFiles()
-        .pipe gulp.dest path.build
+            .pipe @cacheFiles()
+            .pipe gulp.dest path.build
 
     tasks.add 'Bower', => @build()
 
@@ -188,22 +203,22 @@ class ES6 extends App
 
     @compile: ->
         @getFiles()
-        .pipe babel()
-        .on 'error', @error
-        .pipe @cacheFiles()
+            .pipe babel()
+            .on 'error', @error
+            .pipe @cacheFiles()
 
     @build: ->
         @compile()
-        .pipe gulp.dest path.build
+            .pipe gulp.dest path.build
 
     @jspmBuild: ->
         @compile()
-        .pipe gulp.dest path.build
+            .pipe gulp.dest path.build
 
         gulp.src('./jspm_packages/**/*.*')
-        .pipe gulp.dest "#{path.build}jspm_packages/"
+            .pipe gulp.dest "#{path.build}jspm_packages/"
         gulp.src('./config.js')
-        .pipe gulp.dest path.build
+            .pipe gulp.dest path.build
 
     @SFXbuild: ->
         jspm.bundleSFX("#{path.app}application/Application", "#{path.build}scripts/app.js", { sourceMaps: false })
@@ -220,15 +235,15 @@ class Coffee extends App
 
     @compile: ->
         @getFiles()
-        .pipe coffee({bare: true}).on('error', @error)
-        .pipe @cacheFiles()
+            .pipe coffee({bare: true}).on('error', @error)
+            .pipe @cacheFiles()
 
     @build: ->
         @compile()
-        .pipe gulp.dest path.build
+            .pipe gulp.dest path.build
 
     tasks.add 'Coffee', ['Bower'], => @build()
-    .includeTo 'App'
+        .includeTo 'App'
 
 class Stylus extends App
     @sources: "#{path.app}**/*.styl"
@@ -236,10 +251,10 @@ class Stylus extends App
 
     @build: ->
         @getFiles()
-        .pipe stylus()
-        .on 'error', @error
-        .pipe @cacheFiles()
-        .pipe gulp.dest path.build
+            .pipe stylus()
+            .on 'error', @error
+            .pipe @cacheFiles()
+            .pipe gulp.dest path.build
 
     @check: ->
         @getFiles()
@@ -252,21 +267,21 @@ class Stylus extends App
 
     @concat: ->
         @getFiles(true)
-        .pipe stylus()
-        .on 'error', @error
-        .pipe @cacheFiles()
-        .pipe wrap '/* <%= file.relative %> */\n<%= contents %>'
-        .pipe concat 'main.css'
-        .pipe gulp.dest "#{path.build}styles/"
+            .pipe stylus()
+            .on 'error', @error
+            .pipe @cacheFiles()
+            .pipe wrap '/* <%= file.relative %> */\n<%= contents %>'
+            .pipe concat 'main.css'
+            .pipe gulp.dest "#{path.build}styles/"
 
     tasks.add 'Stylus'
-    .includeTo 'App'
+        .includeTo 'App'
 
     tasks.add 'Stylus.check', => @check()
-    .includeTo 'Stylus'
+        .includeTo 'Stylus'
 
     tasks.add 'main.css', 'Stylus.check', => @concat()
-    .includeTo 'Stylus'
+        .includeTo 'Stylus'
 
 class Jade extends App
     @sources: ["#{path.app}**/*.jade", "!#{path.app}index.jade"]
@@ -274,49 +289,49 @@ class Jade extends App
 
     @build: ->
         @getFiles()
-        .pipe jade().on 'error', @error
-        .pipe @cacheFiles()
-        .pipe gulp.dest path.build
+            .pipe jade().on 'error', @error
+            .pipe @cacheFiles()
+            .pipe gulp.dest path.build
 
     @check: ->
         @getFiles()
-        .pipe @cacheFiles()
-        .pipe buffer (err, files) =>
-            if files.length
-                tasks.get('template-cache').enable()
-            else
-                tasks.get('template-cache').disable()
+            .pipe @cacheFiles()
+            .pipe buffer (err, files) =>
+                if files.length
+                    tasks.get('template-cache').enable()
+                else
+                    tasks.get('template-cache').disable()
 
     @templateCache: ->
         @getFiles(true)
-        .pipe jade().on 'error', @error
-        .pipe templateCache('templates.js', {
-            base: path.app
-        })
-        .pipe ES6.cacheFiles()
-        .pipe gulp.dest "#{path.build}"
+            .pipe jade().on 'error', @error
+            .pipe templateCache('templates.js', {
+                base: path.app
+            })
+            .pipe ES6.cacheFiles()
+            .pipe gulp.dest "#{path.build}"
 
     @index: ->
         gulp.src "#{path.app}index.jade"
-        .pipe jade
-            pretty: true,
-            locals:
-                buildmode: settings.buildmode
-                files: @files
-                bower: Bower.files
-        .on 'error', @error
-        .pipe @cacheFiles()
-        .pipe gulp.dest path.build
+            .pipe jade
+                pretty: true,
+                locals:
+                    buildmode: settings.buildmode
+                    files: @files
+                    bower: Bower.files
+            .on 'error', @error
+            .pipe @cacheFiles()
+            .pipe gulp.dest path.build
 
 
     tasks.add 'Jade', ['ES6', 'Stylus'], => @build()
-    .includeTo 'App'
+        .includeTo 'App'
 
     # tasks.add 'template-cache', ['Jade'], => @templateCache()
     #     .includeTo 'App'
 
     tasks.add 'index.html', ['App'], => @index()
-    .includeTo 'compile'
+        .includeTo 'compile'
 
 
 tasks.add 'timer.finish', ['index.html'], ->

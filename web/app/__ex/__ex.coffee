@@ -1,1 +1,0 @@
-alert 'That\'s should be excluded'
