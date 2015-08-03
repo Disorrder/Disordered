@@ -15,7 +15,6 @@ source      = require 'vinyl-source-stream'
 bowerFiles  = require 'main-bower-files'
 templateCache = require 'gulp-angular-templatecache'
 
-coffee      = require 'gulp-coffee'
 jade        = require 'gulp-jade'
 stylus      = require 'gulp-stylus'
 babel       = require 'gulp-babel'
@@ -28,9 +27,9 @@ path =
     build: './.build/',
     excludePrefix: '__'
 
-path.scripts     = "#{path.app}**/*.js"   # ?
-path.styles      = "#{path.app}**/*.styl" # ?
-path.templates   = "#{path.app}**/*.jade" # ?
+path.scripts     = "#{path.app}**/*.js"
+path.styles      = "#{path.app}**/*.styl"
+path.templates   = "#{path.app}**/*.jade"
 path.assets      = 
     images: "#{path.app}**/*.{png,svg,gif,jpg,jpeg,ico}"
     fonts: "#{path.app}**/*.{eot,svg,ttf,woff,woff2}"
@@ -67,14 +66,13 @@ tasks.add 'watch', ['compile'], ->
 
 tasks.add 'webserver', ['compile', 'watch'], ->
     gulp.src path.build
-    .pipe webserver
-        host: '0.0.0.0' #settings.host
-        port: settings.port
-        open: "http://#{settings.host}:#{settings.port}"
-        # fallback: 'index.html'
-        livereload: settings.livereload
-
-
+        .pipe webserver
+            host: '0.0.0.0' # settings.host
+            port: settings.port
+            open: "http://#{settings.host}:#{settings.port}" # true
+            # fallback: 'index.html'
+            livereload: settings.livereload
+        
 # --- BUILDER ---
 getExt = (str) ->
     ext = str.match(/\.\w+$/)
@@ -106,7 +104,8 @@ class Files
         if !@files[ext] then @files[ext] = {}
         @files[ext][f.relative] = f
 
-    @getCheckedFile: (rel) -> #TODO
+    @getCheckedFile: (rel) ->
+
 
     @checkFiles: (full) ->
         eventStream.map (file, cb) =>
@@ -149,23 +148,8 @@ class App extends Files
     @base: path.app
     @files: {}
     @sources: "#{path.app}**/*.*"
-
-    errors = []
-    @logErrorStatus: ->
-        if errors.length
-            status = "With #{errors.length} error"
-            if errors.length > 1 then status += 's'
-            log status.red.underline
-        else
-            status = "Without errors"
-            log status.green.underline
-        return !!errors.length
-
-    @cleanErrors: -> errors.length = 0
-
-    @error: (err, type) ->
-        errors.push err
-        log "\n--- [#{type} error] ---\n".red, err.toString(), "\n------------".red
+    @error: (e, type) ->
+        log "\n--- [#{type} error] ---\n".red, e.toString(), "\n------------".red
         @emit 'end'
 
     tasks.add 'App'
@@ -196,12 +180,13 @@ class Bower extends App
             .pipe gulp.dest path.build
 
     tasks.add 'Bower', => @build()
+        # .includeTo 'ES6'
 
 class ES6 extends App
     @sources: "#{path.app}**/*.js"
     @error: (e) -> super(e, 'Babel')
 
-    @compile: ->
+    @compile: -> 
         @getFiles()
             .pipe babel()
             .on 'error', @error
@@ -223,27 +208,11 @@ class ES6 extends App
     @SFXbuild: ->
         jspm.bundleSFX("#{path.app}application/Application", "#{path.build}scripts/app.js", { sourceMaps: false })
 
-    tasks.add 'ES6', ['Bower'], =>
+    tasks.add 'ES6', ['Bower'], => 
         switch settings.buildmode
             when 'default', 'build' then @build()
             when 'jspm' then @jspmBuild()
     .includeTo 'App'
-
-class Coffee extends App
-    @sources: "#{path.app}**/*.coffee"
-    @error: (e) -> super(e, 'Coffee')
-
-    @compile: ->
-        @getFiles()
-            .pipe coffee({bare: true}).on('error', @error)
-            .pipe @cacheFiles()
-
-    @build: ->
-        @compile()
-            .pipe gulp.dest path.build
-
-    tasks.add 'Coffee', ['Bower'], => @build()
-        .includeTo 'App'
 
 class Stylus extends App
     @sources: "#{path.app}**/*.styl"
@@ -258,12 +227,12 @@ class Stylus extends App
 
     @check: ->
         @getFiles()
-        .pipe @cacheFiles()
-        .pipe buffer (err, files) =>
-            if files.length
-                tasks.get('main.css').enable()
-            else
-                tasks.get('main.css').disable()
+            .pipe @cacheFiles()
+            .pipe buffer (err, files) =>
+                if files.length
+                    tasks.get('main.css').enable()
+                else
+                    tasks.get('main.css').disable()
 
     @concat: ->
         @getFiles(true)
@@ -334,12 +303,8 @@ class Jade extends App
         .includeTo 'compile'
 
 
-tasks.add 'timer.finish', ['index.html'], ->
-    log "Project was built in".yellow.underline, "#{(Date.now() - timer) / 1000}s".green.underline
-    App.logErrorStatus()
-    App.cleanErrors()
-    log "\n\n"
-.includeTo 'compile'
+tasks.add 'timer.finish', ['index.html'], -> log "Project was built in".yellow, "#{(Date.now() - timer) / 1000}s".green, "\n\n"
+    .includeTo 'compile'
 
 ##################
 #   HOW TO RUN   
