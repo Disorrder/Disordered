@@ -5,19 +5,16 @@ html(ng-app="app")
         meta(name="viewport", content="width=device-width, height=device-height" )
         meta(name="viewport", content="initial-scale=1, user-scalable=no")
         title Disordered site
-        //- link(rel="icon" href="/images/favicon.png" sizes="128x128")
-        each style in bower.css
-            link(rel="stylesheet", href="/" + style.relative.replace(/\\/g, '/'))
-        link(rel="stylesheet", href="/styles/main.css")
-        if buildmode == "jspm"
-            script(src="./jspm_packages/system.js")
-            script(src="./config.js")
-            script System.import('./application/Application')
-        else
-            each script in bower.js
-                script(src= "/" + script.relative.replace(/\\/g, '/'))
-            each script in files.js
-                script(src= "/" + script.relative.replace(/\\/g, '/'))
+        //- link(rel="icon" href="/images/favicon4.png" sizes="128x128")
+        if buildmode == "default" || buildmode == "build"
+            each style in files.filterByExt('css')
+                link(rel="stylesheet", href= style.url)
+
+        if buildmode == "default" || buildmode == "build"
+            each script in files.filterByExt('js')
+                script(src= script.url)
+
+        script.
+            var version = !{JSON.stringify(version || {})}
     body
-        //- include application/components/navbar/navbar
         div.viewport(ui-view="", ng-cloak)
