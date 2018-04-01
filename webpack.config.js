@@ -52,6 +52,20 @@ module.exports = {
         library: '[name]'
     },
     devtool: flags.sourcemaps ? "cheap-source-map" : false,
+    devServer: {
+        port: cfg.webserver.port,
+        host: cfg.webserver.host,
+        // hot: true,
+        inline: true,
+        disableHostCheck: true,
+        historyApiFallback: true,
+        contentBase: cfg.path.src,
+        watchOptions: {
+            aggregateTimeout: 300,
+            poll: 1000
+        },
+        stats: 'minimal',
+    },
     resolve: {
         modules: [
             path.join(__dirname, "src"),

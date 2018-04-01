@@ -1,0 +1,18 @@
+$root = "../../../"
+
+#mood
+    // header
+    //     height 10%
+
+    .buttons
+        .btn
+            width 100%
+
+    // .buttons-bad
+    //     background hsl()
+    // .buttons-good
+
+    $step = 100 / 11
+    for num in (0..10)
+        .btn-hsl-{num}
+            background hsl(num * $step, 50%, 52%)

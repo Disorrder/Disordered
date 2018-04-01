@@ -1,0 +1,17 @@
+div#mood.content
+    main.container.pt-4
+        h3.text-center График настроения
+        #graph
+        .d-flex.row-flex.justify-content-center.buttons.buttons-good.my-2
+            each val, i in ['+5', '+4', '+3', '+2']
+                .col-2.px-1: button.btn(class=`btn-hsl-${10-i}`)= val
+                
+        .d-flex.row-flex.justify-content-center.buttons.buttons-neutral.my-2
+            each val, i in ['+1', '0', '-1']
+                .col-2.px-1: button.btn(class=`btn-hsl-${6-i}`)= val
+                
+        .d-flex.row-flex.justify-content-center.buttons.buttons-bad.mt-2
+            each val, i in ['-2', '-3', '-4', '-5']
+                .col-2.px-1: button.btn(class=`btn-hsl-${3-i}`)= val
+            
+        //- .margin-fix
