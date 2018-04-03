@@ -2,7 +2,7 @@ const buildCfg = require('../buildconfig.json');
 const cfg = require('./config');
 
 var mongoose = require('mongoose');
-mongoose.Promise = global.Promise;
+// mongoose.Promise = global.Promise;
 mongoose.connect(cfg.db);
 
 const Koa = require('koa');

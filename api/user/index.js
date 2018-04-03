@@ -3,15 +3,8 @@ const Router = require('koa-router');
 var router = new Router();
 
 router.post('/', async (ctx) => {
-    // Register
-    var data = ctx.request.body;
-    var user = await User.findOne({email: data.email});
-    if (user) return ctx.throw(403); // User is already exists
-
-    user = new User(data);
-    var userData = user.save();
-
-    ctx.body = {data, userData, user};
+    // Create
+    ctx.throw(403);
 });
 
 router.get('/:id', async (ctx) => {
