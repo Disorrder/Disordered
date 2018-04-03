@@ -1,14 +1,17 @@
 var Router = require('koa-router');
 var router = new Router();
 
-let auth = require('./auth');
-router.use('/auth', auth.routes(), auth.allowedMethods());
+{
+    let route;
+    route = require('./auth');
+    router.use('/auth', route.routes(), route.allowedMethods());
 
-let user = require('./user');
-router.use('/user', user.routes(), user.allowedMethods());
+    route = require('./user');
+    router.use('/user', route.routes(), route.allowedMethods());
 
-let mood = require('./mood');
-router.use('/mood', mood.routes(), mood.allowedMethods());
+    route = require('./mood');
+    router.use('/mood', route.routes(), route.allowedMethods());
+}
 
 router.get('/', (ctx, next) => {
     // ctx.router available

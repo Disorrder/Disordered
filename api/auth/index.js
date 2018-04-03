@@ -3,7 +3,6 @@ var Router = require('koa-router');
 var router = new Router();
 
 const passport = require('koa-passport');
-const LocalStrategy = require('passport-local').Strategy;
 
 passport.serializeUser(function(user, done) {
     console.log('serialize user', user);
@@ -21,17 +20,12 @@ passport.deserializeUser(async function(id, done) {
     }
 });
 
-passport.use(new LocalStrategy(function(username, password, done) {
-    var field = ~username.indexOf('@') ? 'email' : 'username';
-    User.findOne({[field]: username}).select('+password')
-    .then((user) => {
-        console.log('LS', user);
-        if (!user) return done(null, false, 'ERR_INCORRECT_USERNAME');
-        if (!user.verifyPassword(password)) return done(null, false, 'ERR_INCORRECT_PASSWORD');
-        return done(null, user);
-    })
-    .catch((e) => done(e));
-}));
+
+{
+    let route;
+    route = require('./local');
+    router.use('', route.routes(), route.allowedMethods());
+}
 
 router.post('/register', async (ctx) => {
     var data = ctx.request.body;
@@ -54,14 +48,6 @@ router.post('/register', async (ctx) => {
         return;
     }
     ctx.body = user;
-});
-
-router.post('/login', passport.authenticate('local'), async (ctx) => {
-    var data = ctx.request.body;
-
-    console.log('LOG', data, ctx, ctx.isAuthenticated(), ctx.state);
-    // user.select('-password');
-    ctx.body = data;
 });
 
 module.exports = router;
