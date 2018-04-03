@@ -8,6 +8,12 @@ mongoose.connect(cfg.db);
 const Koa = require('koa');
 const app = new Koa();
 
+// Common headers
+app.use(async (ctx, next) => {
+    ctx.set('Access-Control-Allow-Origin', '*');
+    await next();
+});
+
 const session = require('koa-session');
 app.keys = [cfg.secretKey];
 app.use(session({}, app));
