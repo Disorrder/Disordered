@@ -108,8 +108,14 @@ module.exports = {
         new HtmlWebpackPlugin({
             filename: 'index.html',
             template: 'index.pug',
-            inject: 'head',
+            inject: 'body',
         }),
+
+        new CopyWebpackPlugin([
+            { from: 'config.js' },
+            { from: 'favicon.*' },
+            // { from: 'robots.txt' },
+        ]),
 
         // new webpack.DefinePlugin({
         //     'NODE_ENV': JSON.stringify(process.env.NODE_ENV)

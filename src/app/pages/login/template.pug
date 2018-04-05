@@ -1,0 +1,14 @@
+div#login.content
+    header Hello
+
+    main.container.mt-4
+        .row.justify-content-center: .card.col-6: .card-body
+            h3.text-center Авторизация
+            form#auth.mt-4(@submit="login")
+                .form-group
+                    input#login.form-control(placeholder="Логин / почта" v-model="authData.login")
+                .form-group
+                    input#login.form-control(placeholder="Пароль" v-model="authData.password")
+                    //- .form-text.text-muted.text-center Пароль можно ввести в игре
+                button.btn.btn-primary(type="submit" style="width: 100%;") Войти
+            

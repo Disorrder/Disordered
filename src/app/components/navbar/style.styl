@@ -1,0 +1,39 @@
+$root = "../../../"
+
+#navbar
+    .navbar-nav
+        padding-right 0
+        text-shadow 3px 3px 3px rgba(10, 19, 19, 1)
+        color #f7f8f8
+        font-family "Trajan Pro 3"
+        font-weight bolder
+        font-size 23px
+        letter-spacing -1.8px
+    
+    // .navbar-brand
+    //     display block
+    //     width 132px
+    //     height 114px
+    //     background-image url($root+"assets/logo/logo-white.png")
+    //     background-size 100%
+    //     background-repeat no-repeat
+    //     background-position center
+    //
+    //     &:hover
+    //         background-image url($root+"assets/logo/logo-moon.png")
+
+
+    .nav-link
+        flex-grow 1
+        float left
+        opacity 0.7
+        transition opacity ease 0.2s
+
+        &:hover, &.active
+            opacity 1
+            .starline
+                opacity 1
+
+        &[disabled]
+            opacity 0.5
+            color #bbb

@@ -1,0 +1,14 @@
+nav#navbar.navbar.navbar-expand-sm
+    .container
+        //- a.navbar-brand.d-none.d-lg-block(href="/")
+            
+        ul.navbar-nav
+            li.nav-item(v-for="item in menu")
+                a.nav-link.text-uppercase.text-center(v-if="item.url" :data-route-name="item.name" :href="item.url" :disabled="item.enabled==false")
+                    .position-relative
+                        span {{item.title}}
+                        
+                router-link.nav-link.text-uppercase.text-center(v-else :to="{name: item.name}")
+                    .position-relative
+                        span {{item.title}}
+        

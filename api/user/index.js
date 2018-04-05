@@ -8,6 +8,7 @@ router.post('/', async (ctx) => {
 });
 
 router.get('/', async (ctx) => {
+    // console.log('current user', ctx.isAuthenticated());
     if (!ctx.isAuthenticated()) return ctx.throw(401);
     ctx.body = ctx.state.user;
 });
