@@ -7,6 +7,11 @@ router.post('/', async (ctx) => {
     ctx.throw(403);
 });
 
+router.get('/', async (ctx) => {
+    if (!ctx.isAuthenticated()) return ctx.throw(401);
+    ctx.body = ctx.state.user;
+});
+
 router.get('/:id', async (ctx) => {
     var user = await User.findById(ctx.params.id);
     if (user) {

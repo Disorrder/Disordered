@@ -37,8 +37,4 @@ router.post('/__login', passport.authenticate('local'), async (ctx) => {
     ctx.body = ctx.state.user;
 });
 
-router.get('/check', async (ctx) => {
-    ctx.body = ctx.isAuthenticated();
-});
-
 module.exports = router;

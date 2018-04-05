@@ -10,7 +10,10 @@ const app = new Koa();
 
 // Common headers
 app.use(async (ctx, next) => {
-    ctx.set('Access-Control-Allow-Origin', '*');
+    if (['http://localhost:8080', 'http://skymp.ru'].includes(ctx.request.header.origin)) {
+        ctx.set('Access-Control-Allow-Origin', ctx.request.header.origin);
+    }
+    ctx.set('Access-Control-Allow-Credentials', 'true');
     await next();
 });
 
