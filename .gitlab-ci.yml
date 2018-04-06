@@ -4,7 +4,9 @@ stages:
 
 build:
   stage: build
-  script: echo "Building the app"
+  script:
+    - npm i
+    - npm run build
 
 deploy_staging:
   stage: deploy
