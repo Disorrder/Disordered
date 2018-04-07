@@ -130,3 +130,14 @@ module.exports = {
         })
     ]
 }
+
+var fs = require('fs');
+{ // check configs
+    ['src/config', 'api/config'].map((v) => {
+        let cfgPath = path.resolve('.', v + '.js');
+        if (!fs.existsSync(cfgPath)) {
+            let defPath = path.resolve('.', v + '.default.js');
+            fs.writeFileSync(cfgPath, fs.readFileSync(defPath));
+        }
+    });
+}

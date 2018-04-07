@@ -1,3 +1,10 @@
+image: node:latest
+
+cache:
+  paths:
+  - node_modules/
+
+
 stages:
   - build
   - deploy
@@ -8,12 +15,12 @@ build:
     - npm i
     - npm run build
 
-deploy_staging:
+deploy:
   stage: deploy
   script:
-    - echo "Deploy to staging server"
+    - echo "Deploy to prod server"
   environment:
-    name: staging
-    url: https://staging.example.com
+    name: production
+    url: http://disordered.ru
   only:
     - master
